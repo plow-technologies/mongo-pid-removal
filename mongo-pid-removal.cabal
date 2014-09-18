@@ -1,0 +1,47 @@
+Name:                   mongo-pid-removal
+Version:                0.0.0
+Author:                 Brent Phillips <brent.phillips@plowtech.net>
+Maintainer:             Brent Phillips <brent.phillips@plowtech.net>
+License:                BSD3
+License-File:           LICENSE
+-- Synopsis:               
+Description:         Removes old pids from mongo   
+Cabal-Version:          >= 1.10
+Build-Type:             Simple
+
+Library
+  Default-Language:     Haskell2010
+  HS-Source-Dirs:       src
+  GHC-Options:          -Wall
+  Exposed-Modules:      Mongo.Pid.Removal
+  Other-Modules:        Mongo.Pid.Removal.Internal
+  Build-Depends:        base >= 4 && < 5
+                      , persist-mongo-template >= 0.5.12
+                      , text
+                      , bytestring
+                      , aeson
+                      , yaml
+                      , persistent                     >= 1.3.0.6   && < 1.3.2
+                      , persistent-mongoDB             >= 1.3.1.1   && < 1.4.3         
+
+Test-Suite spec
+  Type:                 exitcode-stdio-1.0
+  Default-Language:     Haskell2010
+  Hs-Source-Dirs:       src
+                      , test
+                      , persist-mongo-template
+                      , text
+                      , bytestring
+                      , aeson
+                      , yaml
+                      , persistent                   
+                      , persistent-mongoDB                      
+
+  Ghc-Options:          -Wall
+  Main-Is:              Spec.hs
+  Build-Depends:        base
+                      , hspec
+
+Source-Repository head
+  Type:                 git
+--  Location:             
