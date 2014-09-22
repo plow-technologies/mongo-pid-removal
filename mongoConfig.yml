@@ -1,0 +1,3 @@
+host: "localhost"
+db: "onping_production"
+port: 27017
