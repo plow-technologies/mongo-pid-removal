@@ -18,6 +18,7 @@ import Persist.Mongo.Settings
 lst :: [Int]
 lst = [38217,819] 
 
+main :: IO() 
 main = do          
   conf <- readDBConf "mongoConfig.yml"
   removeMissingAlarms conf lst
