@@ -23,7 +23,8 @@ Library
                       , aeson
                       , yaml
                       , persistent                     >= 1.3.0.6  
-                      , persistent-mongoDB             >= 1.3.1.1  
+                      , persistent-mongoDB             >= 1.3.1.1
+                      , containers  
 
 Executable alarmclean
    main-is:            RemovalMain.hs
@@ -38,7 +39,8 @@ Executable alarmclean
                       , aeson
                       , yaml
                       , persistent                   
-                      , persistent-mongoDB           
+                      , persistent-mongoDB
+                      , containers           
 
 
 

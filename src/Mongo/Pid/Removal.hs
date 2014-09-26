@@ -22,19 +22,27 @@ import Persist.Mongo.Settings
 import Database.Persist
 import Data.Aeson
 import Data.Traversable
-removeMissingAlarms :: Either String MongoDBConf -> [Int] -> IO ()
-removeMissingAlarms (Left st) _ = putStrLn "Missing mongo config" >> print st
-removeMissingAlarms (Right mdbc) alarmListPids = do
+import qualified Data.Set as S
+
+
+  
+
+
+removeMissingAlarms :: Either String MongoDBConf -> IO ()
+removeMissingAlarms (Left st)  = putStrLn "Missing mongo config" >> print st
+removeMissingAlarms (Right mdbc) = do
                             (joinKeys,alarmEntityKeys) <- runDBConf mdbc $ do
                               alarms <- selectList [] []
-                              let filteredAlarms = filterAlarmByPids alarmListPids
-                                                       <$> alarms
+                              let pidlist = concat $ alarmPids.entityVal <$> alarms
+                              otclist <- selectList [OnpingTagCombinedPid <-. (Just <$> pidlist)] []
+                              let badPidSet = makeCheckSets pidlist (catMaybes $  (onpingTagCombinedPid.entityVal <$> otclist))
+                              let badPidLst = S.toList badPidSet
+                              let filteredAlarms = filterAlarmByPids badPidLst <$> alarms
                               let filteredAlarmEntities = (catMaybes filteredAlarms)
                               let alarmentitykeys = entityKey <$> filteredAlarmEntities
                               void $ traverse (delete.entityKey) (filteredAlarmEntities)
                               joinkeys <- selectKeysList [AlarmJoinsAlarmId <-. alarmentitykeys] []
                               void $ traverse delete joinkeys
-                               
                               return(joinkeys,alarmentitykeys)
                             putStrLn $ show.encode $ joinKeys
                             putStrLn $ show.encode $ alarmEntityKeys
@@ -46,5 +54,8 @@ filterAlarmByPids pids a@(Entity _ (Alarm {
                      
   
 
-
+makeCheckSets ::(Eq a, Ord a) =>  [a] -> [a] -> (S.Set a)
+makeCheckSets l1 l2 = let s1 = S.fromList l1
+                          s2 = S.fromList l2
+                      in (S.difference s1 s2)
    
