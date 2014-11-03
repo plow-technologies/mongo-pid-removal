@@ -31,7 +31,7 @@ import qualified Data.Set as S
 removeMissingAlarms :: Either String MongoDBConf -> IO ()
 removeMissingAlarms (Left st)  = putStrLn "Missing mongo config" >> print st
 removeMissingAlarms (Right mdbc) = do
-                            (joinKeys,alarmEntityKeys) <- runDBConf mdbc $ do
+                            (joinKeys,alarmEntityKeys,alarmnames,locationNames) <- runDBConf mdbc $ do
                               alarms <- selectList [] []
                               let pidlist = concat $ alarmPids.entityVal <$> alarms
                               otclist <- selectList [OnpingTagCombinedPid <-. (Just <$> pidlist)] []
@@ -40,13 +40,22 @@ removeMissingAlarms (Right mdbc) = do
                               let filteredAlarms = filterAlarmByPids badPidLst <$> alarms
                               let filteredAlarmEntities = (catMaybes filteredAlarms)
                               let alarmentitykeys = entityKey <$> filteredAlarmEntities
-                              void $ traverse (delete.entityKey) (filteredAlarmEntities)
                               joinkeys <- selectKeysList [AlarmJoinsAlarmId <-. alarmentitykeys] []
-                              void $ traverse delete joinkeys
-                              return(joinkeys,alarmentitykeys)
-                            putStrLn $ show.encode $ joinKeys
-                            putStrLn $ show.encode $ alarmEntityKeys
-
+                              let alarmnames = alarmName.entityVal <$> filteredAlarmEntities
+                              alarmjoins <- selectList [AlarmJoinsId <-. joinkeys] []
+                              let locationids = alarmJoinsLocationId.entityVal <$> alarmjoins
+                              locationentitys <- selectList [LocationId <-. locationids] []
+                              let locationNames = locationName.entityVal <$> locationentitys                            
+                              --void $ traverse (delete.entityKey) (filteredAlarmEntities)
+                              --void $ traverse delete joinkeys
+                              return(joinkeys,alarmentitykeys,alarmnames,locationNames)
+                            --putStrLn $ show.encode $ joinKeys
+                            --putStrLn $ show.encode $ alarmEntityKeys
+                            putStrLn $ "Alarm Names Below:"
+                            putStrLn $ show.encode $ alarmnames
+                            putStrLn $ " "
+                            putStrLn $ "Location Names Below:"
+                            putStrLn $ show.encode $ locationNames
 filterAlarmByPids :: [Int] -> (Entity Alarm) -> Maybe (Entity Alarm)                          
 filterAlarmByPids pids a@(Entity _ (Alarm {
                           alarmPids })) = const a <$> listToMaybe 
